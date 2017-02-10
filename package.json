@@ -4,6 +4,7 @@
   "description": "A website dedicated to organizing donut correspondence.",
   "main": "app.js",
   "dependencies": {
+    "bcrypt-nodejs": "0.0.3",
     "jquery": "^1.11.1",
     "node-schedule": "^1.2.0",
     "request": "^2.72.0"

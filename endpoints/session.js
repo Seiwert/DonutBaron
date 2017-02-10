@@ -1,6 +1,7 @@
 "use strict"
 
-var db = require('../db');
+var db = require('../db'),
+bcrypt = require('bcrypt-nodejs');
 
 // The Session endpoint is in charge of creating user sessions, and rendering the login/register pages.
 class Session {
@@ -23,12 +24,20 @@ class Session {
       if (!user) return res.render('login', {
         message: "Username/Password not found.  Please try again."
       });
-      if (user.password != req.body.Password) return res.render('login', {
-        message: "Username/Password not found.  Please try again."
-      });
+      bcrypt.compare(req.body.Password, user.password, function(err, result) {
+        if (err) {
+        console.log("Unable to compare hashed password", err)
+        return res.sendStatus(500)
+        }
+        if (!result && result != null) {
+          return res.render('login', {
+            message: "Username/Password not found.  Please try again."
+          });
+        }
       req.session.user_id = user.userID;
       req.user = user;
       return res.redirect('/');
+      })
     });
   }
 
@@ -41,13 +50,23 @@ class Session {
 
   // Registers a new user and adds them to the database. Donut Scores, Rating booleans, and admin privledges all default to 0.
   register(req, res) {
-    db.run("INSERT INTO users (username_text, real_name, organization, email_address, phone_number, password, donut_quality_rating, donut_reliability_rating, has_rated_this_week, is_donut_baron, is_admin) values (?,?,?,?,?,?,?,?,?,?,?)",
+    if(req.body.organization_name != "GE") {
+      return res.render('register', {
+        message: "Not applicable organization. Ability to create other organizations may be available in the future."
+      })
+    }
+    bcrypt.hash(req.body.password, null, null, function(err,hash) {
+      if (err) {
+        console.log("Unable to hash password",err)
+        return res.sendStatus(500)
+      }
+      db.run("INSERT INTO users (username_text, real_name, organization, email_address, phone_number, password, donut_quality_rating, donut_reliability_rating, has_rated_this_week, is_donut_baron, is_admin) values (?,?,?,?,?,?,?,?,?,?,?)",
       req.body.Username,
       req.body.first_name + " " + req.body.last_name,
       req.body.organization_name,
       req.body.email,
       req.body.phone,
-      req.body.Password,
+      hash,
       0,
       0,
       0,
@@ -75,6 +94,7 @@ class Session {
           return res.redirect('/');
         });
       });
+    })
   }
 
   // Ends a user session by flushing the session cookie. Renders the login page, and passes through an empty message.
