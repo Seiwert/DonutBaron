@@ -5,7 +5,7 @@ var express = require('express'),
   loadUser = require('./middleware/load_user.js'),
   sessions = require('client-sessions'),
   bodyParser = require('body-parser'),
-  CronJob = require('cron').CronJob,
+  schedule = require('node-schedule'),
   db = require('./db'),
   email = require('./email.js');
 
@@ -52,8 +52,8 @@ app.listen(8080, () => {
   console.log('Listening on port 8080...');
 });
 
-// Updates the database every day at midnight.
-new CronJob('00 00 12 * * 0-6', function () {
+// Updates the database every day at 1am.
+var daily = schedule.scheduleJob('0 1 * * 0-7', function () {
 
   console.log("Starting the cron job");
   db.get("SELECT * FROM upcomingList", function (err, row) {
@@ -131,6 +131,6 @@ new CronJob('00 00 12 * * 0-6', function () {
     };
     db.run("DELETE FROM comments");
   });
-}, null, true);
+});
 
 module.exports = exports = app;

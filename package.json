@@ -5,6 +5,7 @@
   "main": "app.js",
   "dependencies": {
     "jquery": "^1.11.1",
+    "node-schedule": "^1.2.0",
     "request": "^2.72.0"
   },
   "devDependencies": {
